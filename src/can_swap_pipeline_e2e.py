@@ -27,13 +27,13 @@ from .can_swap_e2e import can_swapper
 from torchvision import transforms
 from PIL import Image
 import torch.nn.functional as F
-
+from .utils.watermark import add_watermark_to_frame_list, add_image_watermark
 from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
 def make_abs_path(fn):
     return osp.join(osp.dirname(osp.realpath(__file__)), fn)
 
 from insightface_func.face_detect_crop_single import Face_detect_crop
-
+watermark_path = "watermark.png"
 class CanSwapPipeline(object):
 
     def __init__(self, inference_cfg: InferenceConfig, crop_cfg: CropConfig):
@@ -316,8 +316,10 @@ class CanSwapPipeline(object):
             wfp = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}.mp4')
             # wfp = args.outpath
             if I_p_pstbk_lst is not None and len(I_p_pstbk_lst) > 0:
+                I_p_pstbk_lst = add_watermark_to_frame_list(I_p_pstbk_lst, watermark_path, opacity=0.2)
                 images2video(I_p_pstbk_lst, wfp=wfp, fps=output_fps)
             else:
+                I_p_lst = add_watermark_to_frame_list(I_p_lst, watermark_path, opacity=0.2)
                 images2video(I_p_lst, wfp=wfp, fps=output_fps)
 
             ######### build the final result #########
@@ -340,9 +342,11 @@ class CanSwapPipeline(object):
             wfp = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}.jpg')
             # wfp = args.outpath
             if I_p_pstbk_lst is not None and len(I_p_pstbk_lst) > 0:
-                cv2.imwrite(wfp, I_p_pstbk_lst[0][..., ::-1])
+                watermarked_frame = add_image_watermark(I_p_pstbk_lst[0], watermark_path, opacity=0.2)
+                cv2.imwrite(wfp, watermarked_frame[..., ::-1])
             else:
-                cv2.imwrite(wfp, frames_concatenated[0][..., ::-1])
+                watermarked_frame = add_image_watermark(frames_concatenated[0], watermark_path, opacity=0.2)
+                cv2.imwrite(wfp, watermarked_frame[..., ::-1])
             # final log
             log(f'Animated image: {wfp}')
             log(f'Animated image with concat: {wfp_concat}')

@@ -291,12 +291,12 @@ class CanSwapPipeline(object):
         # frames_concatenated = to_frames(I_can_lst)
         # image = self.visualizer.visualize_swap([swap_can, out['out'], res], [mask])
         # imageio.imsave('test.png',image)
-
+        save_prefix = f'{osp.splitext(basename(args.driving))[0]}--{osp.splitext(basename(args.source))[0]}'
         if flag_is_driving_video:
             # flag_source_has_audio = has_audio_stream(args.driving)
             flag_driving_has_audio = has_audio_stream(args.driving)
 
-            wfp_concat = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}_concat.mp4')
+            wfp_concat = osp.join(args.output_dir, f'{save_prefix}_concat.mp4')
 
             # NOTE: update output fps
             output_fps = output_fps
@@ -305,7 +305,7 @@ class CanSwapPipeline(object):
             if flag_driving_has_audio:
             # if False:
                 # final result with concatenation
-                wfp_concat_with_audio = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}_concat_with_audio.mp4')
+                wfp_concat_with_audio = osp.join(args.output_dir, f'{save_prefix}_concat_with_audio.mp4')
                 audio_from_which_video = args.driving
                 log(f"Audio is selected from {audio_from_which_video}, concat mode")
                 add_audio_to_video(wfp_concat, audio_from_which_video, wfp_concat_with_audio)
@@ -313,18 +313,19 @@ class CanSwapPipeline(object):
                 log(f"Replace {wfp_concat_with_audio} with {wfp_concat}")
 
             # save the animated result
-            wfp = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}.mp4')
+            wfp = osp.join(args.output_dir, f'{save_prefix}.mp4')
             # wfp = args.outpath
             if I_p_pstbk_lst is not None and len(I_p_pstbk_lst) > 0:
-                I_p_pstbk_lst = add_watermark_to_frame_list(I_p_pstbk_lst, watermark_path, opacity=0.2)
+                # Note: Not adding watermark since the outputs will be evaluated by a program in my work
+                # I_p_pstbk_lst = add_watermark_to_frame_list(I_p_pstbk_lst, watermark_path, opacity=0.2)
                 images2video(I_p_pstbk_lst, wfp=wfp, fps=output_fps)
             else:
-                I_p_lst = add_watermark_to_frame_list(I_p_lst, watermark_path, opacity=0.2)
+                # I_p_lst = add_watermark_to_frame_list(I_p_lst, watermark_path, opacity=0.2)
                 images2video(I_p_lst, wfp=wfp, fps=output_fps)
 
             ######### build the final result #########
             if flag_driving_has_audio:
-                wfp_with_audio = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}_with_audio.mp4')
+                wfp_with_audio = osp.join(args.output_dir, f'{save_prefix}_with_audio.mp4')
                 audio_from_which_video = args.driving
                 log(f"Audio is selected from {audio_from_which_video}")
                 add_audio_to_video(wfp, audio_from_which_video, wfp_with_audio)
@@ -337,15 +338,17 @@ class CanSwapPipeline(object):
             log(f'Results: {wfp}')
             log(f'Results with concat: {wfp_concat}')
         else:
-            wfp_concat = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}_concat.jpg')
+            wfp_concat = osp.join(args.output_dir, f'{save_prefix}_concat.jpg')
             cv2.imwrite(wfp_concat, frames_concatenated[0][..., ::-1])
-            wfp = osp.join(args.output_dir, f'{basename(args.source)}--{basename(args.driving)}.jpg')
+            wfp = osp.join(args.output_dir, f'{save_prefix}.jpg')
             # wfp = args.outpath
             if I_p_pstbk_lst is not None and len(I_p_pstbk_lst) > 0:
-                watermarked_frame = add_image_watermark(I_p_pstbk_lst[0], watermark_path, opacity=0.2)
+                # watermarked_frame = add_image_watermark(I_p_pstbk_lst[0], watermark_path, opacity=0.2)
+                watermarked_frame = I_p_pstbk_lst[0]
                 cv2.imwrite(wfp, watermarked_frame[..., ::-1])
             else:
-                watermarked_frame = add_image_watermark(frames_concatenated[0], watermark_path, opacity=0.2)
+                # watermarked_frame = add_image_watermark(frames_concatenated[0], watermark_path, opacity=0.2)
+                watermarked_frame = frames_concatenated[0]
                 cv2.imwrite(wfp, watermarked_frame[..., ::-1])
             # final log
             log(f'Animated image: {wfp}')

@@ -150,7 +150,7 @@ class CanSwapPipeline(object):
         if is_video(args.driving):
             flag_is_driving_video = True
             # load from video file, AND make motion template
-            output_fps = int(get_fps(args.driving))
+            output_fps = float(get_fps(args.driving))
             log(f"Load driving video from: {args.driving}, FPS is {output_fps}")
             driving_rgb_lst = load_video(args.driving)
         elif is_image(args.driving):
@@ -271,14 +271,14 @@ class CanSwapPipeline(object):
 
             I_p_lst.append(I_p_i)
 
-            if inf_cfg.flag_pasteback and inf_cfg.flag_do_crop:  # prepare for paste back
+            # Prepare for paste back
+            if inf_cfg.flag_pasteback and inf_cfg.flag_do_crop:
                 mask , _ = self.soft_mask(masks[i].unsqueeze(0).unsqueeze(0))
                 # print(mask.shape)
-                mask = mask.squeeze().data.cpu().numpy()
+                mask   = mask.squeeze().data.cpu().numpy()
                 mask = np.stack([mask, mask, mask], axis=-1)
                 mask_ori_float = prepare_paste_back(mask, target_M_c2o_lst[i], dsize=(driving_rgb_lst[i].shape[1], driving_rgb_lst[i].shape[0]), if_float=True)
 
-            if inf_cfg.flag_pasteback and inf_cfg.flag_do_crop:
                 I_p_pstbk = paste_back(I_p_i, target_M_c2o_lst[i], driving_rgb_lst[i], mask_ori_float)
                 I_p_pstbk_lst.append(I_p_pstbk)
 

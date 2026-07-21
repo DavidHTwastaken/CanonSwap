@@ -101,3 +101,8 @@ for img in tqdm(images):
         fast_check_args(args)
         canswap_pipeline.execute(args)
         i += 1
+# move the rest of the files from inter_dir to output_dir
+if inter_dir:
+    for f in os.listdir(inter_dir):
+        if f.endswith('.mp4'):
+            shutil.move(osp.join(inter_dir, f), osp.join(output_dir, f))

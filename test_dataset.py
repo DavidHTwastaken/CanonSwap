@@ -11,6 +11,8 @@ from src.can_swap_pipeline_e2e import CanSwapPipeline
 from inference_canswap import partial_fields, fast_check_ffmpeg, fast_check_args
 from src.can_swap_pipeline_e2e import CanSwapPipeline
 from tqdm import tqdm
+import shutil
+import argparse
 
 ffmpeg_dir = os.path.join(os.getcwd(), "ffmpeg")
 if osp.exists(ffmpeg_dir):
@@ -48,9 +50,15 @@ def same_gender(vid_name: str, img_name: str, image_csv: pd.DataFrame):
     # print(vid_name, img_name, 'skipped' if vid_is_female != img_is_female else '')
     return vid_is_female == img_is_female
 
+parser = argparse.ArgumentParser(description='Run CanSwap inference on a dataset of images and videos.')
+parser.add_argument('--root', type=str, default=os.path.join('..', 'diverse-face-dataset'), help='Root directory of the dataset containing images and videos.')
+parser.add_argument('--output_dir', type=str, default='results', help='Directory to save the output videos.')
+parser.add_argument('--inter_dir', type=str, help='Intermediate directory for temporary files (optional).')
 
-root = os.path.join('..', 'diverse-face-dataset')
-output_dir = 'results'
+args = parser.parse_args()
+root = args.root
+output_dir = args.output_dir
+inter_dir = args.inter_dir
 
 # m = pd.read_csv(os.path.join(root, 'map.csv'), header=0)
 # print(m)
@@ -69,6 +77,7 @@ image_csv = pd.read_csv(os.path.join(img_data_dir, 'identities.csv'))
 cropped_videos = []
 cropped_images = []
 canswap_pipeline = setup_pipeline(ArgumentConfig())
+i = 0
 for img in tqdm(images):
     for v in tqdm(videos, desc=f"Running all videos for {img}"):
         if not same_gender(os.path.basename(v), os.path.basename(img), image_csv):
@@ -78,11 +87,17 @@ for img in tqdm(images):
         if osp.exists(osp.join(output_dir, save_filename)):
             print(f'Skipping {img} with {v}')
             continue
+        if inter_dir and i % 20 == 0:
+            for f in os.listdir(inter_dir):
+                if f.endswith('.mp4'):
+                    shutil.move(osp.join(inter_dir, f), osp.join(output_dir, f))
         args = ArgumentConfig(
             source=os.path.join(img),
-            driving=os.path.join(v)
+            driving=os.path.join(v),
+            output_dir=inter_dir if inter_dir else output_dir,
         )
         # subprocess.run(["python", "infer.py", 'examples', "--source", os.path.join(img), "--target", os.path.join(v), "--output", f'{img.split(".")[0]}_{v.split(".")[0]}'])
         print(f'Processing {img} with {v}')
         fast_check_args(args)
         canswap_pipeline.execute(args)
+        i += 1

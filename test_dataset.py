@@ -54,11 +54,13 @@ parser = argparse.ArgumentParser(description='Run CanSwap inference on a dataset
 parser.add_argument('--root', type=str, default=os.path.join('..', 'diverse-face-dataset'), help='Root directory of the dataset containing images and videos.')
 parser.add_argument('--output_dir', type=str, default='results', help='Directory to save the output videos.')
 parser.add_argument('--inter_dir', type=str, help='Intermediate directory for temporary files (optional).')
+parser.add_argument('--sources_csv_name',type=str, default='identities.csv',help='File name for the .csv file containing information on source images (file is assumed to exist in root/sources/).')
 
 args = parser.parse_args()
 root = args.root
 output_dir = args.output_dir
 inter_dir = args.inter_dir
+sources_csv_name = args.sources_csv_name
 
 # m = pd.read_csv(os.path.join(root, 'map.csv'), header=0)
 # print(m)
@@ -68,7 +70,7 @@ videos = list(sorted(os.path.join(vid_data_dir, v)
 img_data_dir = os.path.join(root, 'sources')
 images = list(sorted(os.path.join(img_data_dir, i)
               for i in os.listdir(img_data_dir) if i.lower().endswith('jpg')))
-image_csv = pd.read_csv(os.path.join(img_data_dir, 'identities.csv'))
+image_csv = pd.read_csv(os.path.join(img_data_dir, sources_csv_name))
 # # preprocess each video and image
 # videos = m['file'][m['is_video'] == 1]
 # images = m['file'][m['is_video'] == 0]

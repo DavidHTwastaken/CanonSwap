@@ -46,7 +46,7 @@ def same_gender(vid_name: str, img_name: str, image_csv: pd.DataFrame):
     # vid is from RAVDESS, even actor number is female
     vid_is_female = int(vid_name.split('-')[-1].split('.')[0]) % 2 == 0
     # img has a CSV file showing sex of the subject
-    img_is_female = image_csv.loc[image_csv['filename'] == img_name, 'sex'].values[0] == 'female'
+    img_is_female = image_csv.loc[image_csv['Standard File Name'] == img_name, 'Sex'].values[0] == 1
     # print(vid_name, img_name, 'skipped' if vid_is_female != img_is_female else '')
     return vid_is_female == img_is_female
 

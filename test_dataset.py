@@ -62,6 +62,9 @@ output_dir = args.output_dir
 inter_dir = args.inter_dir
 sources_csv_name = args.sources_csv_name
 
+os.makedirs(output_dir, exist_ok=True)
+os.makedirs(inter_dir, exist_ok=True) if inter_dir else None
+
 # m = pd.read_csv(os.path.join(root, 'map.csv'), header=0)
 # print(m)
 vid_data_dir = os.path.join(root, 'targets')

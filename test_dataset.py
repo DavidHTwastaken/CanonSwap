@@ -13,6 +13,7 @@ from src.can_swap_pipeline_e2e import CanSwapPipeline
 from tqdm import tqdm
 import shutil
 import argparse
+import traceback
 
 ffmpeg_dir = os.path.join(os.getcwd(), "ffmpeg")
 if osp.exists(ffmpeg_dir):
@@ -55,12 +56,14 @@ parser.add_argument('--root', type=str, default=os.path.join('..', 'diverse-face
 parser.add_argument('--output_dir', type=str, default='results', help='Directory to save the output videos.')
 parser.add_argument('--inter_dir', type=str, help='Intermediate directory for temporary files (optional).')
 parser.add_argument('--sources_csv_name',type=str, default='identities.csv',help='File name for the .csv file containing information on source images (file is assumed to exist in root/sources/).')
+parser.add_argument('--result_caches',help='List of directory names to check for the existence of result (allows skipping)',type=str,nargs='*')
 
 args = parser.parse_args()
 root = args.root
 output_dir = args.output_dir
 inter_dir = args.inter_dir
 sources_csv_name = args.sources_csv_name
+result_caches = args.result_caches
 
 os.makedirs(output_dir, exist_ok=True)
 os.makedirs(inter_dir, exist_ok=True) if inter_dir else None
@@ -92,6 +95,18 @@ for img in tqdm(images):
         if osp.exists(osp.join(output_dir, save_filename)):
             print(f'Skipping {img} with {v}')
             continue
+        try:
+            if result_caches is not None:
+                for directory in result_caches:
+                    if osp.exists(osp.join(directory,save_filename)):
+                        print(f'Found existing output for {save_filename} in {directory}')
+                        shutil.copy(osp.join(directory, save_filename),
+                                    osp.join(output_dir, save_filename))
+                        break
+        except:
+            traceback.print_exc()
+            print('Error occurred when trying to take existing file from cache, causing the above error')
+
         if inter_dir and i % 20 == 0:
             for f in os.listdir(inter_dir):
                 if f.endswith('.mp4'):
